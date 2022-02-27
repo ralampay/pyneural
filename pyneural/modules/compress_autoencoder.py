@@ -7,7 +7,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from lib.autoencoder import Autoencoder
 
-class Compress:
+class CompressAutoencoder:
     def __init__(self, params={}):
         self.params = params
 

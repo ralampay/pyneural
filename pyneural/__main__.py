@@ -6,11 +6,15 @@ import torch
 sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
 
 from modules.train_autoencoder import TrainAutoencoder
-from modules.compress import Compress
+from modules.train_cnn_autoencoder import TrainCnnAutoencoder
+from modules.compress_autoencoder import CompressAutoencoder
+from modules.compress_cnn_autoencoder import CompressCnnAutoencoder
 
 mode_choices = [
     "train-autoencoder",
-    "compress"
+    "train-cnn-autoencoder",
+    "compress-autoencoder",
+    "compress-cnn-autoencoder"
 ]
 
 def main():
@@ -32,6 +36,16 @@ def main():
     parser.add_argument("--device", help="Device", type=str, default="cpu")
     parser.add_argument("--data-file", help="Data file", type=str)
     parser.add_argument("--output-file", help="Output file", type=str)
+    parser.add_argument("--channel-maps", help="Channel maps", type=int, nargs='+')
+    parser.add_argument("--padding", help="Padding", type=int, default=1)
+    parser.add_argument("--scale", help="Scale", type=int, default=2)
+    parser.add_argument("--img-height", help="IMG Height", type=int, default=100)
+    parser.add_argument("--img-width", help="IMG Width", type=int, default=100)
+    parser.add_argument("--train-img-dir", help="Train Image Directory", type=str)
+    parser.add_argument("--test-img-dir", help="Test Image Directory", type=str)
+    parser.add_argument("--num-channels", help="Num channels", type=int, default=3)
+    parser.add_argument("--kernel-size", help="CNN kernel size", type=int, default=3)
+    parser.add_argument("--normalize", help="Normalize compression", type=bool, default=True)
 
     args            = parser.parse_args()
     mode            = args.mode
@@ -51,8 +65,41 @@ def main():
     device          = args.device
     data_file       = args.data_file
     output_file     = args.output_file
+    channel_maps    = args.channel_maps
+    padding         = args.padding
+    scale           = args.scale
+    img_height      = args.img_height
+    img_width       = args.img_width
+    train_img_dir   = args.train_img_dir
+    test_img_dir    = args.test_img_dir
+    num_channels    = args.num_channels
+    kernel_size     = args.kernel_size
+    normalize       = args.normalize
 
-    if mode == "train-autoencoder":
+    if mode == "train-cnn-autoencoder":
+        params = {
+            'gpu_index':        gpu_index,
+            'epochs':           epochs,
+            'learning_rate':    learning_rate,
+            'chunk_size':       chunk_size,
+            'batch_size':       batch_size,
+            'cont':             cont,
+            'model_file':       model_file,
+            'channel_maps':     channel_maps,
+            'padding':          padding,
+            'scale':            scale,
+            'img_height':       img_height,
+            'img_width':        img_width,
+            'train_img_dir':    train_img_dir,
+            'kernel_size':      kernel_size,
+            'device':           device,
+            'normalize':        normalize
+        }
+
+        cmd = TrainCnnAutoencoder(params=params)
+        cmd.execute()
+
+    elif mode == "train-autoencoder":
         params = {
             'layers':           layers,
             'h_activation':     h_activation,
@@ -73,7 +120,7 @@ def main():
         cmd = TrainAutoencoder(params=params)
         cmd.execute()
 
-    elif mode == "compress":
+    elif mode == "compress-autoencoder":
         params = {
             'model_file':   model_file,
             'output_file':  output_file,
@@ -81,7 +128,19 @@ def main():
             'chunk_size':   chunk_size
         }
 
-        cmd = Compress(params=params)
+        cmd = CompressAutoencoder(params=params)
+        cmd.execute()
+    
+    elif mode == "compress-cnn-autoencoder":
+        params = {
+            'model_file':   model_file,
+            'output_file':  output_file,
+            'chunk_size':   chunk_size,
+            'img_dir':      test_img_dir,
+            'normalize':    normalize
+        }
+
+        cmd = CompressCnnAutoencoder(params=params)
         cmd.execute()
 
 if __name__ == '__main__':
