@@ -79,9 +79,9 @@ class CompressCnnAutoencoder:
         for i in range(len(raw_data[0])):
             columns.append("x{}".format(i))
 
-        df = pd.DataFrame(raw_data, columns=columns)
-
         df_x = pd.DataFrame(raw_data, columns=columns)
+
+        print("Latent Size: {}".format(len(columns)))
 
         # Normalize
         if self.normalize:

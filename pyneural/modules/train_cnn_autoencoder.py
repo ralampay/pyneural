@@ -75,7 +75,9 @@ class TrainCnnAutoencoder:
 
         for epoch in range(self.epochs):
             print("Epoch: {}".format(epoch))
-            self.train_fn(train_loader, model, optimizer, loss_fn, scaler)
+            ave_loss = self.train_fn(train_loader, model, optimizer, loss_fn, scaler)
+
+            print("Ave Loss: {}".format(ave_loss))
 
             # Save model after every epoch
             print("Saving model to {}...".format(self.model_file))
@@ -92,6 +94,9 @@ class TrainCnnAutoencoder:
 
     def train_fn(self, loader, model, optimizer, loss_fn, scaler):
         loop = tqdm(loader)
+
+        ave_loss = 0.0
+        count = 0
 
         for batch_idx, (data, targets) in enumerate(loop):
             data    = data.float().to(device=self.device)
@@ -110,3 +115,10 @@ class TrainCnnAutoencoder:
 
             # update tqdm
             loop.set_postfix(loss=loss.item())
+
+            ave_loss += loss.item()
+            count += 1
+
+        ave_loss = ave_loss / count
+
+        return ave_loss

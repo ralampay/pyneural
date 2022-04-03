@@ -9,12 +9,15 @@ from modules.train_autoencoder import TrainAutoencoder
 from modules.train_cnn_autoencoder import TrainCnnAutoencoder
 from modules.compress_autoencoder import CompressAutoencoder
 from modules.compress_cnn_autoencoder import CompressCnnAutoencoder
+from modules.anomaly_data_partitioner import AnomalyDataPartitioner
 
 mode_choices = [
     "train-autoencoder",
     "train-cnn-autoencoder",
     "compress-autoencoder",
-    "compress-cnn-autoencoder"
+    "compress-cnn-autoencoder",
+    "anomaly-data-partitioner",
+    "extract-frames"
 ]
 
 def main():
@@ -46,35 +49,53 @@ def main():
     parser.add_argument("--num-channels", help="Num channels", type=int, default=3)
     parser.add_argument("--kernel-size", help="CNN kernel size", type=int, default=3)
     parser.add_argument("--normalize", help="Normalize compression", type=bool, default=True)
+    parser.add_argument("--contamination-ratio", help="Contamination Ratio", type=float, default=0.05)
+    parser.add_argument("--normal-count", help="Normal Count", type=int, default=1000)
+    parser.add_argument("--label-column", help="Label Column", type=str, default='y')
+    parser.add_argument("--label-anomaly", help="Label Anomaly", type=int, default=-1)
+    parser.add_argument("--label-normal", help="Label Normal", type=int, default=1)
+    parser.add_argument("--output-train-file", help="Output Train File", type=str, default='output.csv')
+    parser.add_argument("--output-validation-file", help="Output Validation File", type=str, default='validation.csv')
+    parser.add_argument("--output-img-dir", help="Output image directory", type=str, required=False)
+    parser.add_argument("--video-file", help="Video file", type=str, required=False)
 
-    args            = parser.parse_args()
-    mode            = args.mode
-    layers          = args.layers
-    h_activation    = args.h_activation
-    o_activation    = args.o_activation
-    error_type      = args.error_type
-    optimizer_type  = args.optimizer_type
-    gpu_index       = args.gpu_index
-    learning_rate   = args.learning_rate
-    chunk_size      = args.chunk_size
-    batch_size      = args.batch_size
-    cont            = args.cont
-    epochs          = args.epochs
-    model_file      = args.model_file
-    training_file   = args.training_file
-    device          = args.device
-    data_file       = args.data_file
-    output_file     = args.output_file
-    channel_maps    = args.channel_maps
-    padding         = args.padding
-    scale           = args.scale
-    img_height      = args.img_height
-    img_width       = args.img_width
-    train_img_dir   = args.train_img_dir
-    test_img_dir    = args.test_img_dir
-    num_channels    = args.num_channels
-    kernel_size     = args.kernel_size
-    normalize       = args.normalize
+    args                    = parser.parse_args()
+    mode                    = args.mode
+    layers                  = args.layers
+    h_activation            = args.h_activation
+    o_activation            = args.o_activation
+    error_type              = args.error_type
+    optimizer_type          = args.optimizer_type
+    gpu_index               = args.gpu_index
+    learning_rate           = args.learning_rate
+    chunk_size              = args.chunk_size
+    batch_size              = args.batch_size
+    cont                    = args.cont
+    epochs                  = args.epochs
+    model_file              = args.model_file
+    training_file           = args.training_file
+    device                  = args.device
+    data_file               = args.data_file
+    output_file             = args.output_file
+    channel_maps            = args.channel_maps
+    padding                 = args.padding
+    scale                   = args.scale
+    img_height              = args.img_height
+    img_width               = args.img_width
+    train_img_dir           = args.train_img_dir
+    test_img_dir            = args.test_img_dir
+    num_channels            = args.num_channels
+    kernel_size             = args.kernel_size
+    normalize               = args.normalize
+    contamination_ratio     = args.contamination_ratio
+    normal_count            = args.normal_count
+    label_column            = args.label_column
+    label_anomaly           = args.label_anomaly
+    label_normal            = args.label_normal
+    output_train_file       = args.output_train_file
+    output_validation_file  = args.output_validation_file
+    output_img_dir          = args.output_img_dir
+    video_file              = args.video_file
 
     if mode == "train-cnn-autoencoder":
         params = {
@@ -141,6 +162,31 @@ def main():
         }
 
         cmd = CompressCnnAutoencoder(params=params)
+        cmd.execute()
+
+    elif mode == "anomaly-data-partitioner":
+        params = {
+            'data_file':                data_file,
+            'normal_count':             normal_count,
+            'contamination_ratio':      contamination_ratio,
+            'normal_count':             normal_count,
+            'label_column':             label_column,
+            'label_anomaly':            label_anomaly,
+            'label_normal':             label_normal,
+            'output_train_file':        output_train_file,
+            'output_validation_file':   output_validation_file
+        }
+
+        cmd = AnomalyDataPartitioner(params=params)
+        cmd.execute()
+
+    elif mode == "extract-frames":
+        params = {
+            'video_file':       video_file,
+            'output_img_dir':   output_img_dir
+        }
+
+        cmd = ExtractFrames(params=params)
         cmd.execute()
 
 if __name__ == '__main__':
