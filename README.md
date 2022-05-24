@@ -25,7 +25,6 @@ python -m pyneural --model train-cnn-autoencoder \
 --train-img-dir frames \
 --kernel-size 3 \
 --device cuda \
---normalize True
 ```
 
 ### Video Frame Extraction
@@ -33,5 +32,5 @@ python -m pyneural --model train-cnn-autoencoder \
 Extract frames from a video.
 
 ```
-python -m pyneural --mode extract-frames --video-file sample.mp4 --output-img-dir output
+python -m pyneural --mode extract-frames --video-file video.mp4 --output-img-dir output
 ```

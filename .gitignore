@@ -36,3 +36,6 @@ env/
 
 tmp/
 bin/*.sh
+
+output/
+*.mp4

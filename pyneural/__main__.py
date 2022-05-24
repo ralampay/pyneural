@@ -10,6 +10,7 @@ from modules.train_cnn_autoencoder import TrainCnnAutoencoder
 from modules.compress_autoencoder import CompressAutoencoder
 from modules.compress_cnn_autoencoder import CompressCnnAutoencoder
 from modules.anomaly_data_partitioner import AnomalyDataPartitioner
+from modules.extract_frames import ExtractFrames
 
 mode_choices = [
     "train-autoencoder",

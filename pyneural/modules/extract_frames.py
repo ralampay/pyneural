@@ -19,12 +19,15 @@ class ExtractFrames:
         while cap.isOpened():
             ret, frame = cap.read()
 
-            filename = "{}/{}.jpg".format(self.output_img_dir, frame_counter)
-            
-            print("Writing to {}".format(filename)
-            cv2.imwrite(filename, frame)
+            if ret:
+                filename = "{}/{}.jpg".format(self.output_img_dir, frame_counter)
+                
+                print("Writing to {}".format(filename))
+                cv2.imwrite(filename, frame)
 
-            frame_counter += 1
+                frame_counter += 1
+            else:
+                break
 
         cap.release()
 
