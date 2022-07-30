@@ -30,6 +30,7 @@ class TrainAutoencoder:
         self.cont           = params.get('cont')            or False
         self.model_file     = params.get('model_file')
         self.training_file  = params.get('training_file')
+        self.training_data  = params.get('training_data')
 
     def execute(self):
         print("Training model...")
@@ -38,18 +39,18 @@ class TrainAutoencoder:
             print("CUDA Device: {}".format(torch.cuda.get_device_name(self.gpu_index)))
             self.device = "cuda:{}".format(self.gpu_index)
 
-        model   =   Autoencoder(
-                        layers=self.layers,
-                        h_activation=self.h_activation,
-                        o_activation=self.o_activation,
-                        device=self.device
-                    )
+        self.model = Autoencoder(
+            layers=self.layers,
+            h_activation=self.h_activation,
+            o_activation=self.o_activation,
+            device=self.device
+        )
 
         if self.cont:
             print("Loading model from {}".format(self.model_file))
-            model = torch.load(self.model_file)
-            model.load_state_dict(state['state_dict'])
-            model.optimizer = state['optimizer']
+            self.model = torch.load(self.model_file)
+            self.model.load_state_dict(state['state_dict'])
+            self.model.optimizer = state['optimizer']
 
         if self.error_type == "mse":
             loss_fn = nn.MSELoss()
@@ -57,14 +58,18 @@ class TrainAutoencoder:
             raise Exception("Invalid error_type {}".format(self.error_type))
 
         if self.optimizer_type == 'adam':
-            optimizer = optim.Adam(model.parameters(), lr=self.learning_rate) 
+            optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate) 
         else:
             raise Exception("Invalid optimizer_type {}".format(self.optimizer_type))
 
         # Read training file
         data = pd.DataFrame()
-        for i, chunk in enumerate(pd.read_csv(self.training_file, header=None, chunksize=self.chunk_size)):
-            data = data.append(chunk)
+
+        if self.training_file is not None:
+            for i, chunk in enumerate(pd.read_csv(self.training_file, header=None, chunksize=self.chunk_size)):
+                data = data.append(chunk)
+        elif self.training_data is not None:
+            data = pd.DataFrame(self.training_data)
 
         print("Storing data to tensor...")
         x = torch.tensor(data.values).float().to(self.device)
@@ -82,9 +87,8 @@ class TrainAutoencoder:
 
         for epoch in range(self.epochs):
             print("Epoch: {}".format(epoch))
-            self.train_fn(train_loader, model, optimizer, loss_fn)
-
-            print("Saving model to {}...".format(self.model_file))
+            ave_loss = self.train_fn(train_loader, self.model, optimizer, loss_fn)
+            print("Ave Loss: {}".format(ave_loss))
 
             state = {
                 'params': {
@@ -93,7 +97,7 @@ class TrainAutoencoder:
                     'layers':       self.layers,
                     'device':       self.device
                 },
-                'state_dict':       model.state_dict(),
+                'state_dict':       self.model.state_dict(),
                 'optimizer':        optimizer.state_dict()
             }
 
@@ -101,6 +105,9 @@ class TrainAutoencoder:
     
     def train_fn(self, loader, model, optimizer, loss_fn):
         loop = tqdm(loader)
+
+        ave_loss = 0.0
+        count = 0
 
         for batch_idx, (data, targets) in enumerate(loop):
             data    = data.to(device=self.device)
@@ -120,3 +127,10 @@ class TrainAutoencoder:
 
             # update tqdm
             loop.set_postfix(loss=loss.item())
+
+            ave_loss += loss.item()
+            count += 1
+
+        ave_loss = ave_loss / count
+
+        return ave_loss

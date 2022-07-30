@@ -39,3 +39,4 @@ bin/*.sh
 
 output/
 *.mp4
+*.pth
