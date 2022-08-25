@@ -31,6 +31,9 @@ build/
 # Ignore jupyter notebook checkpoints
 notebooks/**/.ipynb_checkpoints/
 
+# Ignore partition data
+notebooks/partitions/*.csv
+
 # Ignore env
 env/
 
